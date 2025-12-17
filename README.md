@@ -28,9 +28,9 @@ ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
 ```
 Ensuite :
 ```bash
-docker build –t rentalService .
+docker build –t rental-virtu .
 ```
 Et enfin :
 ```bash
-docker run rentalService
+docker run rental-virtu -p 8080:8080
 ```
