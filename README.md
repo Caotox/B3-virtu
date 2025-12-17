@@ -32,5 +32,5 @@ docker build –t rental-virtu .
 ```
 Et enfin :
 ```bash
-docker run rental-virtu -p 8080:8080
+docker run -p 8080:8080 rental-virtu
 ```
