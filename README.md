@@ -7,7 +7,7 @@ cd RentalService
 ./gradlew build
 ```
 Puis :
-````java
+```java
 java -jar build/libs/RentalService-0.0.1-SNAPSHOT.jar  
 ```
 Et accéder à :
