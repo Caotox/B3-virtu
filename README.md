@@ -96,3 +96,71 @@ docker login
 docker tag phpservice:latest caotox/phpservice:latest
 docker push caotox/phpservice:latest
 ```
+
+## Communication entre microservices
+
+Modification du fichier BonjourController.java pour ajouter la route /bonjour-php :
+```bash
+nano RentalService/src/main/java/com/ingnum/rentalservice/controller/BonjourController.java
+```
+
+Rebuild du projet Java :
+```bash
+cd RentalService
+./gradlew clean build
+```
+
+Création du docker-compose.yml à la racine :
+```bash
+cd ..
+touch docker-compose.yml
+nano docker-compose.yml
+```
+Et on y met le contenu suivant :
+```yaml
+version: '3.8'
+
+services:
+  rental-service:
+    build: ./RentalService
+    container_name: rental-service
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    depends_on:
+      - php-service
+
+  php-service:
+    build: ./PHPService
+    container_name: php-service
+    ports:
+      - "8081:80"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+```
+
+Lancement des services avec docker-compose :
+```bash
+docker-compose up --build
+```
+
+Tests :
+- http://localhost:8080/bonjour
+- http://localhost:8081/index.php
+- http://localhost:8080/bonjour-php (communication Java -> PHP)
+
+Arrêter les conteneurs :
+```bash
+docker-compose down
+```
+
+Mise à jour de l'image Java sur Docker Hub :
+```bash
+docker build -t caotox/rental-service:latest ./RentalService
+docker push caotox/rental-service:latest
+```
