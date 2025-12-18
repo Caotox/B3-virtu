@@ -34,3 +34,65 @@ Et enfin :
 ```bash
 docker run -p 8080:8080 rental-virtu
 ```
+Et accéder à :
+http://localhost:8080/bonjour
+
+## Microservice PHP
+
+Création du dossier PHPService :
+```bash
+mkdir PHPService
+cd PHPService
+```
+
+Création du fichier index.php :
+```bash
+touch index.php
+nano index.php
+```
+Et on y met le contenu suivant :
+```php
+<?php
+header('Content-Type: application/json');
+
+$response = [
+    "prenom" => "Antoine",
+    "message" => "Bonjour ! Mon prenom est Antoine"
+];
+
+echo json_encode($response);
+?>
+```
+
+Création du Dockerfile :
+```bash
+touch Dockerfile
+nano Dockerfile
+```
+Et on y met le contenu suivant :
+```dockerfile
+FROM php:8.2-apache
+
+COPY index.php /var/www/html/
+
+EXPOSE 80
+```
+
+Construction de l'image Docker :
+```bash
+docker build -t phpservice .
+```
+
+Test du service :
+```bash
+docker run -p 8080:80 phpservice
+```
+Et accéder à :
+http://localhost:8080/index.php
+
+Publication sur Docker Hub :
+```bash
+docker login
+docker tag phpservice:latest caotox/phpservice:latest
+docker push caotox/phpservice:latest
+```
