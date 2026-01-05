@@ -207,3 +207,30 @@ docker-compose up --build
 
 Test de la communication HTTP entre microservices :
 - http://localhost:8080/bonjour-php (Java appelle PHP via HTTP)
+
+## Résumé des rendus :
+
+Voici le code principal, à savoir le controller de la partie Java de notre projet. Elle va permettre d'implémenter ces 3 routes :
+
+- http://localhost:8080/bonjour
+
+![Capture](images/bonjour.png)
+
+
+- http://localhost:8080/bonjour-php
+
+![Capture](images/bonjourphp.png)
+
+- http://localhost:8080/customer/Antoine%20Rocq
+
+![Capture](images/customer.png)
+
+- http://localhost:8081/index.html
+
+![Capture](images/index.png)
+
+
+Le fonctionnement est simple. 
+- Pour la route "bonjour", on va simplement renvoyer "bonjour".
+- Pour la route "bonjour-php", on va renvoyer bonjour suivi de name. Cette variable name est également présente dans la route "customer/{name}". Ces deux routes vont faire un appel HTTP, qui va être gêré par notre service PHP. Le service PHP va analyser la requête (url de notre navigateur), et renvoyer une valeur de name différente selon la route appelée (donc selon le pattern d'url identifié). Pour la route "bonjour-php", on renverra simplement "Tonio", parce que le return de la méthode a déjà 'bonjour' à quoi on ajoute le name (qui vient d'être récupéré), et pour la route "customer/{name}", on renverra tout le message directement car le return de la méthode concerne tout le retour du fichier PHP. ("L'adresse de Antoine Rocq est 3 rue de la Paix")
+- Dans la même idée, le else de index.html permet également, lorsqu'on accède à l'url "index.html" avec le port "8081" (donc "http://localhost:8081/index.html") d'afficher seulement Tonio (et pas le bonjour, car on ne passe pas par l'application Java, le controller, et donc le return avec le bonjour)
