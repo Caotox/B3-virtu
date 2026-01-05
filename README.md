@@ -164,3 +164,46 @@ Mise à jour de l'image Java sur Docker Hub :
 docker build -t caotox/rental-service:latest ./RentalService
 docker push caotox/rental-service:latest
 ```
+
+## Communication entre vos deux microservices via HTTP
+
+Modification du fichier application.properties pour ajouter l'URL du service PHP :
+```bash
+nano RentalService/src/main/resources/application.properties
+```
+Et on y ajoute :
+```properties
+customer.service.url=http://php-service
+```
+
+Modification du BonjourController.java pour ajouter la communication HTTP :
+```bash
+nano RentalService/src/main/java/com/ingnum/rentalservice/controller/BonjourController.java
+```
+Et on y ajoute :
+```java
+@Value("${customer.service.url}")
+private String customerServiceUrl;
+
+@GetMapping("/bonjour-php")
+public String bonjourPhp() {
+    RestTemplate restTemplate = new RestTemplate();
+    String name = restTemplate.getForObject(customerServiceUrl, String.class);
+    return "bonjour " + name;
+}
+```
+
+Rebuild du projet :
+```bash
+cd RentalService
+./gradlew clean build
+```
+
+Reconstruction et relancement des conteneurs :
+```bash
+cd ..
+docker-compose up --build
+```
+
+Test de la communication HTTP entre microservices :
+- http://localhost:8080/bonjour-php (Java appelle PHP via HTTP)

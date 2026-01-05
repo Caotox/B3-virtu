@@ -1,10 +1,12 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: text/plain');
 
-$response = [
-    "prenom" => "Antoine",
-    "message" => "Bonjour ! Mon prenom est Antoine"
-];
+$requestUri = $_SERVER['REQUEST_URI'];
 
-echo json_encode($response);
+if (preg_match('#^/customers/([^/]+)/address#', $requestUri, $matches)) {
+    $name = urldecode($matches[1]);
+    echo "L'adresse de " . $name . " est 3 rue de la Paix";
+} else {
+    echo "Tonio";
+}
 ?>
