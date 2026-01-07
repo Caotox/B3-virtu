@@ -251,14 +251,21 @@ A partir de là, dans le controller 2 méthodes ont été ajoutées :
 - http://localhost:8080/cars/{plate}
 
 ![Capture](images/carplate.png)
+
 ## Déploiement sur Kubernetes
 
-### Prérequis
-- Kubernetes installé (Docker Desktop, Minikube, etc.)
-- kubectl configuré
-- Images Docker buildées
 
-### Construction des images Docker
+### Étape 1 : Démarrer Minikube
+
+```bash
+# Démarrer Minikube
+minikube start
+
+# Vérifier que le cluster est actif
+kubectl cluster-info
+```
+
+### Étape 2 : Construction des images Docker
 
 Avant de déployer sur Kubernetes, il faut construire les images Docker :
 
@@ -266,65 +273,118 @@ Avant de déployer sur Kubernetes, il faut construire les images Docker :
 # Build de l'image RentalService
 cd RentalService
 ./gradlew build
-docker build -t tonio/rental-service:latest .
+docker build -t caotox/rental-service:latest .
 
 # Build de l'image PHPService
 cd ../PHPService
-docker build -t tonio/php-service:latest .
+docker build -t caotox/php-service:latest .
 cd ..
 ```
 
-### Déploiement avec Kubernetes
+### Étape 3 : Charger les images dans Minikube
+
+```bash
+# Charger les images dans Minikube
+minikube image load caotox/php-service:latest
+minikube image load caotox/rental-service:latest
+
+# Vérifier que les images sont chargées
+minikube image ls | grep caotox
+```
+
+### Étape 4 : Déploiement avec Kubernetes
 
 Le fichier `kubernetes-deployment.yml` contient la configuration complète pour déployer l'application sur Kubernetes avec :
 - Un déploiement MySQL avec son service (ClusterIP)
 - Un déploiement PHP avec son service (ClusterIP)
 - Un déploiement RentalService avec son service (LoadBalancer)
 
-Pour déployer l'application sur Kubernetes :
-
 ```bash
 # Appliquer la configuration Kubernetes
 kubectl apply -f kubernetes-deployment.yml
 
-# Vérifier le statut des pods
+# Vérifier le statut des pods (attendre que tous soient "Running")
 kubectl get pods
 
 # Vérifier le statut des services
 kubectl get services
-
-# Attendre que tous les pods soient en état "Running"
-kubectl wait --for=condition=ready pod -l app=rental-service --timeout=300s
 ```
 
-### Accès aux services
+### Étape 5 : Accès aux services avec Minikube
 
-Avec Kubernetes, les URLs changent :
-- Pour accéder au RentalService depuis l'extérieur : utiliser l'IP du service LoadBalancer
-  ```bash
-  kubectl get service rental-service
-  ```
-- Sur Docker Desktop ou Minikube, utiliser : `http://localhost:8080`
-
-### Différences avec Docker Compose
-
-**Configuration des URLs (application.properties) :**
-- Docker Compose : `jdbc:mysql://localhost:3307/...` (mapping de port)
-- Kubernetes : `jdbc:mysql://rental-mysql-service:3306/...` (nom du service)
-
-**Résolution DNS :**
-- Docker Compose : résolution par nom de conteneur
-- Kubernetes : résolution par nom de service (DNS interne au cluster)
-
-### Commandes utiles
+Pour accéder au RentalService depuis le navigateur avec Minikube :
 
 ```bash
-# Voir les logs d'un pod
-kubectl logs -f <nom-du-pod>
-
-# Supprimer tous les déploiements
-kubectl delete -f kubernetes-deployment.yml
-
-# Redémarrer un déploiement
-kubectl rollout restart deployment/rental-service-deployment
+# Obtenir l'URL du service
+minikube service rental-service --url
 ```
+
+Cette commande retourne une URL (exemple : `http://192.168.49.2:30123`). Utiliser cette URL pour tester :
+
+```bash
+# Remplacer <URL> par l'URL retournée par la commande ci-dessus
+curl <URL>/bonjour
+curl <URL>/bonjour-php
+curl "<URL>/customer/Antoine%20Rocq"
+curl <URL>/cars
+```
+
+Ou ouvrir dans le navigateur :
+- `<URL>/bonjour`
+- `<URL>/bonjour-php`
+- `<URL>/customer/Antoine%20Rocq`
+- `<URL>/cars`
+
+## Gateway avec Ingress
+
+### Configuration d'Ingress
+
+
+#### Activer Ingress dans Minikube
+
+```bash
+minikube addons enable ingress
+
+# Vérifier que le contrôleur Ingress est actif
+kubectl get pods -n ingress-nginx
+```
+
+#### Appliquer la configuration Ingress
+
+```bash
+kubectl apply -f ingress.yml
+kubectl get ingress
+```
+
+#### Configurer le fichier hosts
+
+Pour que le nom de domaine `rental-service.info` fonctionne en local :
+
+```bash
+echo "127.0.0.1 rental-service.info" | sudo tee -a /etc/hosts
+```
+
+#### Activer le tunnel Minikube
+
+Le tunnel permet d'accéder à l'Ingress depuis localhost :
+
+```bash
+minikube tunnel
+```
+
+#### Tester l'accès via le Gateway
+
+Maintenant on peut accéder aux services via le nom de domaine :
+
+```bash
+curl http://rental-service.info/bonjour
+curl http://rental-service.info/bonjour-php
+curl "http://rental-service.info/customer/Antoine%20Rocq"
+curl http://rental-service.info/cars
+```
+
+Ou dans le navigateur :
+- http://rental-service.info/bonjour
+- http://rental-service.info/bonjour-php
+- http://rental-service.info/customer/Antoine%20Rocq
+- http://rental-service.info/cars

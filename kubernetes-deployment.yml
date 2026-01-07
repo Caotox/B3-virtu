@@ -69,7 +69,7 @@ spec:
     spec:
       containers:
       - name: php-service-container
-        image: tonio/php-service:latest
+        image: caotox/php-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
@@ -103,7 +103,7 @@ spec:
     spec:
       containers:
       - name: rental-service-container
-        image: tonio/rental-service:latest
+        image: caotox/rental-service:latest
         imagePullPolicy: IfNotPresent
         env:
         - name: SPRING_APPLICATION_NAME
